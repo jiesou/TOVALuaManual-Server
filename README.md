@@ -4,4 +4,4 @@
 
 后端和文档正在开发中。（目前完全不可用）
 
-API 起始位置 `https://jiecs-aluamu.vercel.app/api/`
+API 起始位置 `https://jiecs-aluamu.vercel.app/api/`, dev 分支为 `https://jiecs-aluamu-dev.vercel.app/api/`
