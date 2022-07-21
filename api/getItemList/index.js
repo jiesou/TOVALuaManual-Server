@@ -15,11 +15,11 @@ export default async function handler(request, response) {
     let page = Math.abs(~~reqBody.page) || 0;
     // 查询
     let query = await new AV.Query('Item')
-        // 只需要某些属性
-        .select(['id', 'title', 'category', 'time' ,'user','source', 'description', 'reaction', 'comments.length'])
-        // 按 time.create 降序排列
-        .descending('time.create')
+        // 不需要某些属性
+        .select(['content', '-comments.d'])
+        // 按 timeCreate 降序排列
+        .descending('timeCreate')
         .skip(page * pageLength)
         .limit(pageLength).find();
-    return sendResponse(response, 200, 'Success', query);
+    return sendResponse(response, 0, 'Success', query);
 }

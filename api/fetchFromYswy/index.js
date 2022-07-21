@@ -8,20 +8,23 @@ AV.init({
 AV.debug.enable();  // 启用调试
 
 export default async function handler(request, response) {
+    // 先获取总页数
+    let res = await fetch('https://api.yswy.com/api/v1/news/list?page=1');
+    let allPage = await res.json();
+    allPage = allPage.per_page
+
     // 声明 class
     var Item = AV.Object.extend('Item');
 
     // 遍历每一页
-    // 开发调试中限制只请求一页
-    for (let page = 1; page <= 1; page++) {
+    for (let page = 1; page <= allPage; page++) {
         console.log('pageStart', page)
         // 拼接 API 链接并发出请求
         await fetch(`https://lua.yswy.top/index/api/manuallist?page=${page}`).then(async res => {
             res = await res.json()
             res = res.data;
             // 遍历每一个帖子(手册项目)
-            // 开发调试中限制只解析三条
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < res.length; i++) {
                 // 获取帖子信息
                 let resItem = res[i];
                 // 检查帖子是否已在数据库中
@@ -36,10 +39,8 @@ export default async function handler(request, response) {
                 item.set('id', resItem.manual_id);
                 item.set('title', resItem.manual_name);
                 item.set('category', resItem.type_id);
-                item.set('time', {
-                    create: new Date(resItem.manual_time_add).getTime(),
-                    edit: new Date(resItem.manual_time).getTime()
-                });
+                item.set('timeCreate', new Date(resItem.manual_time_add).getTime());
+                item.set('timeEdit', new Date(resItem.manual_time).getTime());
                 item.set('source', resItem.manual_source);
                 item.set('user', {
                     id: resItem.user_id,
@@ -48,11 +49,12 @@ export default async function handler(request, response) {
                 });
                 let content = resItem.manual_content;
                 item.set('content', content);
-                item.set('description', content.replace(/\s/g, ' ').substring(0, 200));
+                item.set('description', content.replace(/\s/g, ' ').substring(0, 300));
                 item.set('reaction', {
                     like: resItem.manual_up,
                     dislike: resItem.manual_down
                 });
+                item.set('views', resItem.manual_hits);
                 // 获取评论
 
                 let resComments = await fetch(`https://lua.yswy.top/index/api/commentlist?page=1&manual_id=${resItem.manual_id}`);
