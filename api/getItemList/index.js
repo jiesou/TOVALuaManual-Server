@@ -1,25 +1,40 @@
 import ReqBodyParser from '../units/reqBodyParser.js';
-import sendResponse from '../units/sendResponse.js';
+import makeResponse from '../units/makeResponse.js';
 import AV from 'leancloud-storage';
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,
     appKey: process.env.LEANCLOUD_APP_KEY,
 });
-AV.debug.enable();  // 启用调试
+//AV.debug.enable();  // 启用调试
 
 export default async function handler(request, response) {
     let reqBody = new ReqBodyParser(request);
-    // 获取页面数和长度
-    let pageLength = Math.abs(~~reqBody.pageLength) || 10;
-    let page = Math.abs(~~reqBody.page) || 0;
+    // 获取页数和长度
+    let page = ~~reqBody.page | 0;
+    if (page < 0) {
+        page = 0;
+    }
+    let pageLength = ~~reqBody.pageLength | 10;
+    if (pageLength < 1) {
+        pageLength = 1;
+    } else if (pageLength > 50) {
+        pageLength = 50;
+    }
     // 查询
-    let query = await new AV.Query('Item')
-        // 不需要某些属性
-        .select(['content', '-comments.d'])
-        // 按 timeCreate 降序排列
-        .descending('timeCreate')
-        .skip(page * pageLength)
-        .limit(pageLength).find();
-    return sendResponse(response, 0, 'Success', query);
+    let items = new AV.Query('Item');
+        let data =  {
+        'cucrrentPage': page,
+        'totalPage': ~~(await items.count() / pageLength),
+        'items': await items
+            // 不需要某些属性
+            .select(['content', '-comments.d'])
+            // 按 timeCreate 倒序
+            .descending('timeCreate')
+            .skip(page * pageLength)
+            .limit(pageLength).find(),
+    }
+    console.log(data)
+    return makeResponse(response, 0, 'Success', data);
 }
+        
