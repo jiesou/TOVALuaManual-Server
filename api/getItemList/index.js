@@ -28,7 +28,7 @@ export default async function handler(request, response) {
         'totalPage': ~~(await items.count() / pageLength),
         'items': await items
             // 不需要某些属性
-            .select(['content', '-comments.d'])
+            .select(['-content', '-comments.data'])
             // 按 timeCreate 倒序
             .descending('timeCreate')
             .skip(page * pageLength)
