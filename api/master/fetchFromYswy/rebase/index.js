@@ -40,7 +40,7 @@ export default async function handler(request, response) {
                 let data = res[i]
                 // 检查帖子是否已在数据库中
                 let item = await new AV.Query('Item')
-                    .equalTo('id', data.manual_id)
+                    .equalTo('id', String(data.manual_id))
                     .first();
                 if (!item) {
                     console.log(`page ${page} itemStart`, i);

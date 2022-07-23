@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import AV from 'leancloud-storage';
-import makeResponse from '../../../units/makeResponse.js';
-import itemDataToObj from '../../units/itemDataToObj.js';
+import makeResponse from '../../units/makeResponse.js';
+import itemDataToObj from '../units/itemDataToObj.js';
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,
@@ -22,7 +22,6 @@ export default async function handler(request, response) {
 
     // 遍历每一页
     for (let page = 1; page <= allPage; page++) {
-        console.log('pageStart', page)
 
         // 拼接 API 链接并发出请求
         await fetch(`https://lua.yswy.top/index/api/manuallist?page=${page}`).then(async res => {
@@ -34,7 +33,7 @@ export default async function handler(request, response) {
                 let data = res[i]
                 // 检查帖子是否已在数据库中
                 let item = await new AV.Query('Item')
-                    .equalTo('id', data.manual_id)
+                    .equalTo('id', String(data.manual_id))
                     .first();
                 if (item) {
                     // 有重复说明已同步到上次的位置
