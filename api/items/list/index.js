@@ -1,5 +1,5 @@
-import ReqBodyParser from '../units/reqBodyParser.js';
-import makeResponse from '../units/makeResponse.js';
+import ReqParameterParser from '../../units/reqParamsParser.js';
+import makeResponse from '../../units/makeResponse.js';
 import AV from 'leancloud-storage';
 
 AV.init({
@@ -9,7 +9,7 @@ AV.init({
 //AV.debug.enable();  // 启用调试
 
 export default async function handler(request, response) {
-    let reqBody = new ReqBodyParser(request);
+    let reqBody = new ReqParameterParser(request);
     // 获取页数和长度
     let page = ~~reqBody.page | 0;
     if (page < 0) {
@@ -23,7 +23,7 @@ export default async function handler(request, response) {
     }
     // 查询
     let items = new AV.Query('Item');
-        let data =  {
+    return makeResponse(response, 0, 'Success', {
         'cucrrentPage': page,
         'totalPage': ~~(await items.count() / pageLength),
         'items': await items
@@ -33,8 +33,5 @@ export default async function handler(request, response) {
             .descending('timeCreate')
             .skip(page * pageLength)
             .limit(pageLength).find(),
-    }
-    console.log(data)
-    return makeResponse(response, 0, 'Success', data);
+    });
 }
-        

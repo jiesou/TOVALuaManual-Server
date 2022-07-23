@@ -1,4 +1,4 @@
-export default class ReqBodyParser {
+export default class ReqParamsParser {
     constructor(request) {
         let { body } = request;
         if (body) {

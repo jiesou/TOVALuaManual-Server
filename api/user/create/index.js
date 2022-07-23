@@ -1,6 +1,6 @@
 import AV from 'leancloud-storage';
-import ReqBodyParser from '../../units/reqBodyParser.js';
 import makeResponse from '../../units/makeResponse.js';
+import ReqParameterParser from '../../units/reqParamsParser.js';
 import encrypt from '../../units/user/encrypter.js';
 
 AV.init({
@@ -11,7 +11,7 @@ AV.init({
 export default async function handler(request, response) {
     let User = AV.Object.extend('User');
 
-    let reqBody = new ReqBodyParser(request);
+    let reqBody = new ReqParameterParser(request);
 
     if (!/^.{2,12}$/.test(reqBody.nick)) {
         return makeResponse(response, -31, 'Invalid nick.');
@@ -19,7 +19,7 @@ export default async function handler(request, response) {
     if (!/^[\w\d_\+\-\?!@#\$%^&\*\(\)\/]{8,64}$/.test(reqBody.password)) {
         return makeResponse(response, -32, 'Invalid password.');
     }
-    if (!/^.+?@.+?/.test(reqBody.email)) {
+    if (!/^.{1,64}?@[^\.]{1,63}?(\.[^.]{1,63})+$/.test(reqBody.email)) {
         return makeResponse(response, -33, 'Invalid email.');
     }
     // 检查邮箱是否已在数据库中
