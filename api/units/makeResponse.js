@@ -1,14 +1,10 @@
 export default function makeResponse(response, code, message, data) {
-    if (data instanceof Array | data instanceof Object) {
-        return response.json({
-            code: code,
-            message: message,
-            data: data
-        });
-    } else {
-        return response.json({
-            code: code,
-            message: message
-        });
+    let result = {
+        code: code,
+        message: message
     }
+    if (data instanceof Array | data instanceof Object) {
+        result.data = data;
+    }
+    response.json(result);
 }

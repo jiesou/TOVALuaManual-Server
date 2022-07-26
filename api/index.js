@@ -1,6 +1,4 @@
-export default async function handler(request, response) {
-  return response.json({
-    'code': 0,
-    'message': 'Hello, world!',
-  });
+import makeResponse from './units/makeResponse.js';
+export default async function handler(_request, response) {
+  makeResponse(response, 0, 'Hello, world!');
 }

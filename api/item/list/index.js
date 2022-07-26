@@ -23,7 +23,7 @@ export default async function handler(request, response) {
     }
     // 查询
     let items = new AV.Query('Item');
-    return makeResponse(response, 0, 'Success', {
+    makeResponse(response, 0, 'Success.', {
         'cucrrentPage': page,
         'totalPage': ~~(await items.count() / pageLength),
         'items': await items

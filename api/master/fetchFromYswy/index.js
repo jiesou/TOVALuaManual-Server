@@ -32,7 +32,7 @@ export default async function handler(request, response) {
                 // 有重复说明已同步到上次的位置
                 // 保存全部到数据库
                 await AV.Object.saveAll(items);
-                return makeResponse(response, 0, 'Success')
+                return makeResponse(response, 0, 'Success.')
             } else {
                 // 构建新对象
                 item = new Item();

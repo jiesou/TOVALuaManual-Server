@@ -1,8 +1,12 @@
 import crypto from 'crypto';
 
-export default function encryptedPassword(password) {
-    password = crypto('sha1').update(password).digest('hex');
-    password = process.env.PASSWORD_SALT + password;
-    password = crypto('sha1').update(password).digest('hex');
-    return password;
+export function encrypt(something) {/*  */
+    something = crypto.createHash('sha1').update(something).digest('hex');
+    something = process.env.PASSWORD_SALT + something;
+    something = crypto.createHash('sha1').update(something).digest('hex');
+    return something;
+}
+export function encryptMD5(something) {
+    something = crypto.createHash('md5').update(something).digest('hex');
+    return something;
 }
