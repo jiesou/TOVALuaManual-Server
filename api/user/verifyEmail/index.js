@@ -15,5 +15,5 @@ export default async function handler(request, response) {
         return makeResponse(response, -21)
     }
 
-    return makeResponse(response, 0, 'Success, please verify your email.');
+    return makeResponse(response, 0, 'Success., please verify your email.');
 }

@@ -59,7 +59,7 @@ export default async function handler(request, response) {
             // 如果全部页面完成
             if (finishedPage >= allPage) {
                 console.log('Task finished');
-                return makeResponse(response, 0, 'Success')
+                return makeResponse(response, 0, 'Success.')
             }
         });
     }
