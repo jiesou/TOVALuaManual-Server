@@ -44,5 +44,5 @@ export default async function handler(request, response) {
     user.set('verifiedEmail', false);
     await user.save();
 
-    makeResponse(response, 0, 'Success., please verify your email.');
+    makeResponse(response, 0, 'Success, please verify your email.');
 }
