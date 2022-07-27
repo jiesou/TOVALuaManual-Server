@@ -5,12 +5,11 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.27.2",
+    "express": "^4.18.1",
     "leancloud-storage": "^4.13.1",
     "node-fetch": "^3.2.9"
   },
   "devDependencies": {
-    "eslint": "^8.20.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint": "^8.20.0"
   }
 }
