@@ -1,7 +1,7 @@
 var router = require('express').Router();
 var AV = require('leancloud-storage');
-var makeResponse = require('../units/makeResponse.js');
-var reqParamsParser = require('../units/reqParamsParser.js');
+var makeResponse = require('../../../units/makeResponse.js');
+var reqParamsParser = require('../../../units/reqParamsParser.js');
 
 router.get('/list', async (request, response) => {
     let reqBody = new reqParamsParser(request);

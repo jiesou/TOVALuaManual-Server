@@ -1,5 +1,5 @@
 var router = require('express').Router();
 
-router.use('/item', require('./item.js'));
+router.use('/fetchFromYswy', require('./fetchFromYswy'));
 
 module.exports = router;
