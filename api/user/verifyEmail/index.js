@@ -1,7 +1,7 @@
-import AV from 'leancloud-storage';
-import ReqBodyParser from '../../units/reqBodyParser.js';
-import makeResponse from '../../units/makeResponse.js';
-import userChecker from '../../units/user/checker.js';
+var AV = require('leancloud-storage);
+var ReqBodyParser = require('../../units/reqBodyParser.js);
+var makeResponse = require('../../units/makeResponse.js);
+var userChecker = require('../../units/user/checker.js);
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,

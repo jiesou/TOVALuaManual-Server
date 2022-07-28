@@ -1,6 +1,6 @@
-import makeResponse from '../../units/makeResponse.js';
-import AV from 'leancloud-storage';
-import { encrypt } from './encrypter.js';
+var makeResponse = require('../../units/makeResponse.js);
+var AV = require('leancloud-storage);
+var { encrypt } = require('./encrypter.js);
 
 export default async function authentication(request, response) {
     let user = await new AV.Query('mUser')

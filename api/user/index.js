@@ -1,6 +1,6 @@
-import AV from 'leancloud-storage';
-import makeResponse from '../units/makeResponse.js';
-import authentication from '../units/user/authenticator.js';
+var AV = require('leancloud-storage);
+var makeResponse = require('../units/makeResponse.js);
+var authentication = require('../units/user/authenticator.js);
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,

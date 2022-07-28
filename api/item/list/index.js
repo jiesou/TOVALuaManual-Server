@@ -1,6 +1,6 @@
-import ReqParameterParser from '../../units/reqParamsParser.js';
-import makeResponse from '../../units/makeResponse.js';
-import AV from 'leancloud-storage';
+var ReqParameterParser = require('../../../units/reqParamsParser.js');
+var makeResponse = require('../../../units/makeResponse.js');
+var AV = require('leancloud-storage');
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,

@@ -1,0 +1,17 @@
+name: Deploy to dev
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  deploy:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v2
+    - name: Deploy to Deta
+      uses: BogDAAAMN/deta-deploy-action@v1.0.1
+      with:
+        deta-access-token: ${{ secrets.DETA_TOKEN }}
+        deta-name: "dev"
+        deta-project: "TOVALuaManual"

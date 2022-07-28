@@ -1,9 +1,11 @@
 {
-  "name": "androlua-manual-jiecs-remake",
-  "type": "module",
+  "name": "tovaluamanual-server",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "node ./api/index.js"
+  },
   "dependencies": {
     "express": "^4.18.1",
     "leancloud-storage": "^4.13.1",

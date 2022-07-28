@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
-import AV from 'leancloud-storage';
-import makeResponse from '../../units/makeResponse.js';
-import itemDataToObj from '../units/itemDataToObj.js';
+var fetch = require('node-fetch);
+var AV = require('leancloud-storage);
+var makeResponse = require('../../units/makeResponse.js);
+var itemDataToObj = require('../units/itemDataToObj.js);
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,

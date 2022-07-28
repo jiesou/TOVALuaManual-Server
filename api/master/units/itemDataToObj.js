@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+var fetch = require('node-fetch);
 
 async function mFetch(url) {
     try {

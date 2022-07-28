@@ -1,14 +1,17 @@
 {
-    "routes": [
-        {
-         "src": "/api/units/.*",
-         "headers": { "Location": "/" },
-         "status": 307
-        },
-        {
-            "src": "/api/fetchFromYswy/rebase/.*",
-            "headers": { "Location": "/" },
-            "status": 307
-        }
-     ]
+  "routes": [
+    {
+      "src": "/api/units/.*",
+      "headers": { "Location": "/" },
+      "status": 307
+    },
+    {
+      "src": "/api/fetchFromYswy/rebase/.*",
+      "headers": { "Location": "/" },
+      "status": 307
+    }
+  ],
+  "github": {
+    "silent": true
   }
+}

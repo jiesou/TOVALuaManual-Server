@@ -1,7 +1,7 @@
-import AV from 'leancloud-storage';
-import makeResponse from '../../units/makeResponse.js';
-import ReqParameterParser from '../../units/reqParamsParser.js';
-import { encrypt, encryptMD5 } from '../../units/user/encrypter.js';
+var AV = require('leancloud-storage);
+var makeResponse = require('../../units/makeResponse.js);
+var ReqParameterParser = require('../../units/reqParamsParser.js);
+var { encrypt, encryptMD5 } = require('../../units/user/encrypter.js);
 
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,
