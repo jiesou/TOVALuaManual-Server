@@ -1,5 +1,7 @@
 .vercel
 .deta
+.env
+nodemon.json
 net
 
 # Logs
