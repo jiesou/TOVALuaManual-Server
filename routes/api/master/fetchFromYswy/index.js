@@ -1,10 +1,10 @@
-var router = require('express').Router();
-var AV = require('leancloud-storage');
+const router = require('express').Router();
+const AV = require('leancloud-storage');
 const { default: fetch } = require("node-fetch-cjs");
-var makeResponse = require('../../../../units/makeResponse.js');
+const makeResponse = require('../../../../units/makeResponse.js');
 
 // 声明 class
-var Item = AV.Object.extend('Item');
+const Item = AV.Object.extend('Item');
 
 router.get('/', async (request, response) => {
     // 初始化所有帖子对象的数组

@@ -1,13 +1,13 @@
-var express = require('express');
-var makeResponse = require('./units/makeResponse.js');
-var AV = require('leancloud-storage');
+const express = require('express');
+const makeResponse = require('./units/makeResponse.js');
+const AV = require('leancloud-storage');
 
 AV.init({
   appId: process.env.LEANCLOUD_APP_ID,
   appKey: process.env.LEANCLOUD_APP_KEY,
 });
 
-var app = express()
+const app = express();
 
 app.get('/', (request, response) => {
   makeResponse(response, 0, 'Hello, world!');
