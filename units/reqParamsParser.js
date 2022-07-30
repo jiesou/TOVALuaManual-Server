@@ -15,7 +15,7 @@
 // }
 
 function reqParamsParser (request) {
-    let arr = []
+    let arr
     let { body } = request;
     arr = body || request.query;
     return arr
