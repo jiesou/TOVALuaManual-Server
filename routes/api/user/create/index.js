@@ -17,12 +17,15 @@ router.get('/', async (request, response) => {
 
     if (!/^.{2,12}$/.test(reqBody.nick)) {
         makeResponse(response, -31, 'Invalid nick.');
+        return
     }
     if (!/^.{1,64}?@[^.]{1,63}?(\.[^.]{1,63})+$/.test(request.headers.email)) {
         makeResponse(response, -32, 'Invalid email.');
+        return
     }
     if (!/^[\w._+\-?!@#$%^&*()/]{8,64}$/.test(request.headers.password)) {
         makeResponse(response, -33, 'Invalid password.');
+        return
     }
 
     let id = encryptMD5(request.headers.email + new Date().getTime()).substr(0, 8)
@@ -35,6 +38,7 @@ router.get('/', async (request, response) => {
                 .equalTo('email', request.headers.email)
         ).first()) {
         makeResponse(response, -34, 'User already exists.');
+        return
     }
 
     // 构建新对象
