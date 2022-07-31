@@ -1,8 +1,8 @@
-var makeResponse = require('../../units/makeResponse.js);
-var AV = require('leancloud-storage);
-var { encrypt } = require('./encrypter.js);
+const makeResponse = require('../../units/makeResponse.js');
+const AV = require('leancloud-storage');
+const {encrypt} = require('./encrypter.js');
 
-export default async function authentication(request, response) {
+async function authentication(request, response) {
     let user = await new AV.Query('mUser')
         .equalTo('email', request.headers.email).select(['-objectId', '-createdAt', '-updatedAt']).first()
     if (user && user.get('password') === encrypt(request.headers.password)) {
@@ -11,3 +11,5 @@ export default async function authentication(request, response) {
         makeResponse(response, -21, 'Authentication failed.');
     }
 }
+
+module.exports = authentication;

@@ -28,8 +28,12 @@ router.get('/', async (request, response) => {
     let id = encryptMD5(request.headers.email + new Date().getTime()).substr(0, 8)
 
     // 检查用户是否已在数据库中
-    if (await new AV.Query('mUser')
-        .equalTo('id', id).first()) {
+    if (await new AV.Query.or(
+        new AV.Query('mUser')
+                .equalTo('id', id),
+        new AV.Query('mUser')
+                .equalTo('email', request.headers.email)
+        ).first()) {
         makeResponse(response, -34, 'User already exists.');
     }
 
@@ -48,3 +52,5 @@ router.get('/', async (request, response) => {
 
     makeResponse(response, 0, 'Success, please verify your email.');
 })
+
+module.exports = router;
