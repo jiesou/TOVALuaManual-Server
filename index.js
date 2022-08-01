@@ -15,7 +15,7 @@ app.get('/', (request, response) => {
 app.use('/api', require('./routes/api'));
 app.use(function (request, response) {
   // 如果没有路由回答就返回 404
-  makeResponse(response, -21, 'Not Found');
+  makeResponse(response, -41, 'Not Found.');
 });
 
 module.exports = app;

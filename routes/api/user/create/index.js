@@ -37,7 +37,7 @@ router.get('/', async (request, response) => {
         new AV.Query('mUser')
                 .equalTo('email', request.headers.email)
         ).first()) {
-        makeResponse(response, -34, 'User already exists.');
+        makeResponse(response, -41, 'User already exists.');
         return
     }
 

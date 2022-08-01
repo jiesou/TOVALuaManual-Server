@@ -23,12 +23,31 @@ router.get('/list', async (request, response) => {
         'totalPage': ~~(await items.count() / pageLength),
         'items': await items
             // 不需要某些属性
-            .select(['-content', '-comments.data'])
+            .select(['-content', '-comments.data', '-objectId', '-createdAt', '-updatedAt'])
             // 按 timeCreate 倒序
             .descending('timeCreate')
             .skip(page * pageLength)
             .limit(pageLength).find(),
     });
 });
+
+router.get('/', async (request, response) => {
+    let reqBody = reqParamsParser(request);
+    // 判断 id 是否合法
+    if (/^[\da-f]{1,12}$/.test(String(reqBody.id))) {
+        // 在数据库中查找帖子
+        let item = await new AV.Query('Item')
+            .equalTo('id', reqBody.id)
+            .select(['-description', '-objectId', '-createdAt', '-updatedAt']).first();
+        if (item) {
+            makeResponse(response, 0, 'Success.', item);
+        } else {
+            makeResponse(response, -41, 'Item not found.');
+        }
+    } else {
+        makeResponse(response, -31, 'Invalid id.');
+    }
+});
+
 
 module.exports = router;
