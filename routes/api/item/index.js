@@ -4,7 +4,7 @@ var makeResponse = require('../../../units/makeResponse.js');
 var reqParamsParser = require('../../../units/reqParamsParser.js');
 
 router.get('/list', async (request, response) => {
-    let reqBody = new reqParamsParser(request);
+    let reqBody = reqParamsParser(request);
     // 获取页数和长度
     let page = ~~reqBody.page | 0;
     if (page < 0) {

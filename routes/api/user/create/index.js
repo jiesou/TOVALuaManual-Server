@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const AV = require('leancloud-storage');
 const makeResponse = require("../../../../units/makeResponse");
-const ReqParameterParser = require('../../../../units/reqParamsParser.js');
+const reqParameterParser = require('../../../../units/reqParamsParser.js');
 const {encryptMD5, encrypt} = require("../../../../units/user/encrypter");
 
 
@@ -13,7 +13,7 @@ AV.init({
 router.get('/', async (request, response) => {
     let User = AV.Object.extend('mUser');
 
-    let reqBody = new ReqParameterParser(request);
+    let reqBody = reqParameterParser(request);
 
     if (!/^.{2,12}$/.test(reqBody.nick)) {
         makeResponse(response, -31, 'Invalid nick.');
