@@ -4,12 +4,6 @@ const makeResponse = require("../../../../units/makeResponse");
 const reqParameterParser = require('../../../../units/reqParamsParser.js');
 const {encryptMD5, encrypt} = require("../../../../units/user/encrypter");
 
-
-AV.init({
-    appId: process.env.LEANCLOUD_APP_ID,
-    appKey: process.env.LEANCLOUD_APP_KEY,
-});
-
 router.get('/', async (request, response) => {
     let User = AV.Object.extend('mUser');
 

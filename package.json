@@ -9,6 +9,7 @@
     "deploy": "deta deploy"
   },
   "dependencies": {
+    "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "leancloud-storage": "^4.13.1",
     "node-fetch-cjs": "^3.2.9"

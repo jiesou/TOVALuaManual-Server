@@ -1,41 +1,43 @@
 const router = require('express').Router();
 const AV = require('leancloud-storage');
-const { default: fetch } = require("node-fetch-cjs");
+const {default: fetch} = require("node-fetch-cjs");
 const makeResponse = require('../../../../units/makeResponse.js');
 
 // 声明 class
 const Item = AV.Object.extend('Item');
 
-router.get('/', async (request, response) => {
-    // 初始化所有帖子对象的数组
-    let items = []
 
+async function createItem(data) {
+    // 检查帖子是否已在数据库中
+    console.log('createItem');
+    let item = await new AV.Query('Item')
+        .equalTo('id', String(data.manual_id))
+        .first();
+    if (!item) {
+        item = new Item();
+    }
+    item = await itemDataToObj(data, item);
+    await item.save()
+}
+router.get('/', (request, response) => {
     // 只处理第一页
-    await fetch('https://lua.yswy.top/index/api/manuallist?page=1').then(async res => {
+    fetch('https://lua.yswy.top/index/api/manuallist?page=1').then(async res => {
         res = await res.json()
         res = res.data;
 
         // 遍历前十个帖子(手册项目)
+        let finishedItems = 0;
         for (let i = 0; i < 10; i++) {
-            let data = res[i]
-            // 检查帖子是否已在数据库中
-            let item = await new AV.Query('Item')
-                .equalTo('id', String(data.manual_id))
-                .first();
-            if (item) {
-                // 有重复说明已同步到上次的位置
-                // 保存全部到数据库
-                await AV.Object.saveAll(items);
-                return makeResponse(response, 0, 'Success.')
-            } else {
-                // 构建新对象
-                item = new Item();
-                item = await itemDataToObj(data, item);
-                items.push(item);
-            }
+            createItem(res[i]).then(() => {
+                finishedItems++;
+                if (finishedItems >= 10) {
+                    makeResponse(response, 0, 'Success.')
+                }
+            });
         }
     });
 });
+
 router.get('/all', async (request, response) => {
     // 先获取总页数
     let res = await fetch('https://lua.yswy.top/index/api/manuallist?page=1');
