@@ -4,20 +4,19 @@ const {default: fetch} = require("node-fetch-cjs");
 const makeResponse = require('../../../../units/makeResponse.js');
 
 // 声明 class
-const Item = AV.Object.extend('Item');
+const Post = AV.Object.extend('Post');
 
 
-async function createItem(data) {
+async function createPost(data) {
     // 检查帖子是否已在数据库中
-    console.log('createItem');
-    let item = await new AV.Query('Item')
+    let post = await new AV.Query('Post')
         .equalTo('id', String(data.manual_id))
         .first();
-    if (!item) {
-        item = new Item();
+    if (!post) {
+        post = new Post();
     }
-    item = await itemDataToObj(data, item);
-    await item.save()
+    post = await postDataToObj(data, post);
+    await post.save()
 }
 router.get('/', (request, response) => {
     // 只处理第一页
@@ -28,7 +27,7 @@ router.get('/', (request, response) => {
         // 遍历前十个帖子(手册项目)
         let finishedItems = 0;
         for (let i = 0; i < 10; i++) {
-            createItem(res[i]).then(() => {
+            createPost(res[i]).then(() => {
                 finishedItems++;
                 if (finishedItems >= 10) {
                     makeResponse(response, 0, 'Success.')
@@ -59,27 +58,27 @@ router.get('/all', async (request, response) => {
             res = await res.json()
             res = res.data;
             // 初始化所有帖子对象的数组
-            let items = []
+            let posts = []
 
             // 遍历每一个帖子(手册项目)
             for (let i = 0; i < res.length; i++) {
                 let data = res[i]
                 // 检查帖子是否已在数据库中
-                let item = await new AV.Query('Item')
+                let post = await new AV.Query('Item')
                     .equalTo('id', String(data.manual_id))
                     .first();
-                if (!item) {
+                if (!post) {
                     console.log(`page ${page} itemStart`, i);
                     // 构建新对象
-                    item = new Item();
-                    item = await itemDataToObj(data, item);
-                    items.push(item);
+                    post = new Post();
+                    post = await postDataToObj(data, post);
+                    posts.push(post);
                     console.log(`page ${page} itemEnd`, i);
                 }
             }
             console.log('pageEnd', page)
             // 保存该页全部到数据库
-            await AV.Object.saveAll(items);
+            await AV.Object.saveAll(posts);
             finishedPage++;
             console.log(`Task ${finishedPage} / ${allPage}`);
             // 如果全部页面完成
@@ -104,7 +103,7 @@ async function mFetch(url) {
     }
 }
 
-async function itemDataToObj(data, item) {
+async function postDataToObj(data, item) {
     // 对 item 对象赋值
     item.set('id', String(data.manual_id));
     item.set('title', data.manual_name);

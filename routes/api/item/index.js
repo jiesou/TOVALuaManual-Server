@@ -17,11 +17,11 @@ router.get('/list', async (request, response) => {
         pageLength = 50;
     }
     // 查询
-    let items = new AV.Query('Item');
+    let posts = new AV.Query('Post');
     makeResponse(response, 0, 'Success.', {
         'cucrrentPage': page,
-        'totalPage': ~~(await items.count() / pageLength),
-        'items': await items
+        'totalPage': ~~(await posts.count() / pageLength),
+        'posts': await posts
             // 不需要某些属性
             .select(['-content', '-comments.data', '-objectId', '-createdAt', '-updatedAt'])
             // 按 timeCreate 倒序
@@ -36,11 +36,11 @@ router.get('/', async (request, response) => {
     // 判断 id 是否合法
     if (/^[\da-f]{1,12}$/.test(String(reqBody.id))) {
         // 在数据库中查找帖子
-        let item = await new AV.Query('Item')
+        let post = await new AV.Query('Item')
             .equalTo('id', reqBody.id)
             .select(['-description', '-objectId', '-createdAt', '-updatedAt']).first();
-        if (item) {
-            makeResponse(response, 0, 'Success.', item);
+        if (post) {
+            makeResponse(response, 0, 'Success.', post);
         } else {
             makeResponse(response, -41, 'Item not found.');
         }
