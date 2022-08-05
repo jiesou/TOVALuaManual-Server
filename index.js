@@ -11,14 +11,14 @@ AV.init({
 // new AV.Query('Item').limit(1000).find().then(async (oldItems) => {
 //     let items = [];
 //     let n = 0;
-//     for (let item of oldItems) {
-//         let oldAvatar = item.get('user').avatar;
+//     for (let post of oldItems) {
+//         let oldAvatar = post.get('user').avatar;
 //         console.log(oldAvatar);
 //         if (oldAvatar) {
 //             let newAvatar = `https://${oldAvatar.substr(oldAvatar.indexOf('/') + 2)}`
-//             item.set("user.avatar", newAvatar);
+//             post.set("user.avatar", newAvatar);
 //             console.log(newAvatar);
-//             items.push(item);
+//             items.push(post);
 //         }
 //         n++;
 //     }

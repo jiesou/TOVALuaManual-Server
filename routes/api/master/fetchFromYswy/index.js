@@ -104,7 +104,7 @@ async function mFetch(url) {
 }
 
 async function postDataToObj(data, item) {
-    // 对 item 对象赋值
+    // 对 post 对象赋值
     item.set('id', String(data.manual_id));
     item.set('title', data.manual_name);
     item.set('category', data.type_id);
