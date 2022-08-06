@@ -27,6 +27,7 @@ router.get('/', (request, response) => {
         // 遍历前十个帖子(手册项目)
         let finishedItems = 0;
         for (let i = 0; i < 10; i++) {
+            // 多线程 10 条帖子并发
             createPost(res[i]).then(() => {
                 finishedItems++;
                 if (finishedItems >= 10) {

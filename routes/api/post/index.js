@@ -21,10 +21,10 @@ router.get('/list', async (request, response) => {
     makeResponse(response, 0, 'Success.', {
         'cucrrentPage': page,
         'totalPage': ~~(await posts.count() / pageLength),
+        // 不需要某些属性
+        // 按 timeCreate 倒序
         'posts': await posts
-            // 不需要某些属性
             .select(['-content', '-comments.data', '-objectId', '-createdAt', '-updatedAt'])
-            // 按 timeCreate 倒序
             .descending('timeCreate')
             .skip(page * pageLength)
             .limit(pageLength).find(),
