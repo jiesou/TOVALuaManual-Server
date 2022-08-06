@@ -1,23 +1,17 @@
 const router = require('express').Router();
-const AV = require('leancloud-storage');
+const db = require('../../../../adapter/leancloud.js');
 const {default: fetch} = require("node-fetch-cjs");
 const makeResponse = require('../../../../units/makeResponse.js');
 
 // 声明 class
-const Post = AV.Object.extend('Post');
-
+const Post = new db('Post');
 
 async function createPost(data) {
-    // 检查帖子是否已在数据库中
-    let post = await new AV.Query('Post')
-        .equalTo('id', String(data.manual_id))
-        .first();
-    if (!post) {
-        post = new Post();
-    }
-    post = await postDataToObj(data, post);
-    await post.save()
+    await Post.update({
+        id: String(data.manual_id),
+    }, await postDataToObj(data));
 }
+
 router.get('/', (request, response) => {
     // 只处理第一页
     fetch('https://lua.yswy.top/index/api/manuallist?page=1').then(async res => {
@@ -63,23 +57,16 @@ router.get('/all', async (request, response) => {
 
             // 遍历每一个帖子(手册项目)
             for (let i = 0; i < res.length; i++) {
-                let data = res[i]
-                // 检查帖子是否已在数据库中
-                let post = await new AV.Query('Item')
-                    .equalTo('id', String(data.manual_id))
-                    .first();
-                if (!post) {
-                    console.log(`page ${page} itemStart`, i);
-                    // 构建新对象
-                    post = new Post();
-                    post = await postDataToObj(data, post);
-                    posts.push(post);
-                    console.log(`page ${page} itemEnd`, i);
-                }
+                let data = res[i];
+                console.log(`page ${page} itemStart`, i);
+                posts.push({
+                    id: String(data.manual_id),
+                }, await postDataToObj(data));
+                console.log(`page ${page} itemEnd`, i);
             }
             console.log('pageEnd', page)
             // 保存该页全部到数据库
-            await AV.Object.saveAll(posts);
+            await Post.updateAll(posts);
             finishedPage++;
             console.log(`Task ${finishedPage} / ${allPage}`);
             // 如果全部页面完成
@@ -104,38 +91,41 @@ async function mFetch(url) {
     }
 }
 
-async function postDataToObj(data, item) {
-    // 对 post 对象赋值
-    item.set('id', String(data.manual_id));
-    item.set('title', data.manual_name);
-    item.set('category', data.type_id);
-    item.set('timeCreate', new Date(data.manual_time_add).getTime());
-    item.set('timeEdit', new Date(data.manual_time).getTime());
-    item.set('source', data.manual_source);
-    item.set('user', {
-        id: data.user_id,
-        name: data.user_name,
-        avatar: data.user_portrait
-    });
-    let content = data.manual_content;
+/**
+ *
+ * @param data 帖子
+ * @param data.manual_id id
+ * @param data.manual_name 标题
+ * @param data.type_id 类型 id
+ * @param data.manual_time_add 添加时间
+ * @param data.manual_time 编辑时间
+ * @param data.manual_source 来源
+ * @param data.user_id 作者 id
+ * @param data.user_name 作者名称
+ * @param data.user_portrait 作者头像
+ * @param data.manual_content 内容
+ * @param data.manual_fav 收藏数
+ * @param data.manual_up 赞数
+ * @param data.manual_down 踩数
+ * @param data.manual_hits 点击数
+ * @returns {Promise<*>}
+ */
+async function postDataToObj(data) {
     // 获取完整内容
     let resContent = await mFetch(`https://lua.yswy.top/index/api/manualdata?manual_id=${data.manual_id}`);
-    item.set('favs', resContent.manual_fav);
-    item.set('content', resContent.manual_content);
-    item.set('description', content.replace(/\s/g, ' ').substring(0, 300));
-    item.set('reaction', {
-        like: data.manual_up,
-        dislike: data.manual_down
-    });
-    item.set('views', data.manual_hits);
+
     // 获取评论
     let resComments = await mFetch(`https://lua.yswy.top/index/api/commentlist?page=1&manual_id=${data.manual_id}`);
-    // 遍历每一条评论
     let comments = [];
-    for (let i = 0; i < resComments.length; i++) {
-        let comment = resComments[i];
+    // 遍历每一条评论
+    resComments.forEach(comment => {
+        /**
+         * @property comment_id 评论 id
+         * @property comment_content 评论内容
+         * @property comment_time 评论时间
+         */
         comments.push({
-            id: comment.comment_id,
+            id: String(comment.comment_id),
             timeCreate: new Date(comment.comment_time.replace(/[年月日]/g, '.')).getTime(),
             content: comment.comment_content,
             user: {
@@ -144,12 +134,34 @@ async function postDataToObj(data, item) {
                 avatar: comment.user_portrait
             },
         });
+    })
+
+    // 对 post 对象赋值
+    return {
+        id: String(data.manual_id),
+        title: data.manual_name,
+        category: data.type_id,
+        timeCreate: new Date(data.manual_time_add).getTime(),
+        timeEdit: new Date(data.manual_time).getTime(),
+        source: data.manual_source,
+        user: {
+            id: data.user_id,
+            name: data.user_name,
+            avatar: data.user_portrait
+        },
+        favorites: resContent.manual_fav,
+        content: resContent.manual_content,
+        description: resContent.manual_content.replace(/\s/g, ' ').substring(0, 300),
+        reaction: {
+            like: data.manual_up,
+            dislike: data.manual_down
+        },
+        views: data.manual_hits,
+        comments: {
+            length: comments.length,
+            data: comments
+        }
     }
-    item.set('comments', {
-        length: comments.length,
-        data: comments
-    });
-    return item
 }
 
 module.exports = router;

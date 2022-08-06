@@ -1,12 +1,12 @@
 const express = require('express');
 const makeResponse = require('./units/makeResponse.js');
-const AV = require('leancloud-storage');
+const db = require('./adapter/leancloud.js');
 
 require('dotenv').config()
-AV.init({
+db.init({
     appId: process.env.LEANCLOUD_APP_ID,
     appKey: process.env.LEANCLOUD_APP_KEY,
-});
+})
 
 // new AV.Query('Item').limit(1000).find().then(async (oldItems) => {
 //     let items = [];
