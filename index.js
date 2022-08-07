@@ -33,7 +33,7 @@ const app = express();
 app.get('/', (request, response) => {
     makeResponse(response, 0, 'Hello, world!');
 })
-app.use('/api', require('./routes/api'));
+app.use('/api', require('./api'));
 app.use(function (request, response) {
     // 如果没有路由回答就返回 404
     makeResponse(response, -41, 'Not Found.');

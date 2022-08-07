@@ -1,10 +1,22 @@
 const router = require('express').Router();
-const AV = require('leancloud-storage');
-const makeResponse = require("../../../../units/makeResponse");
-const reqParameterParser = require('../../../../units/reqParamsParser.js');
-const {encryptMD5, encrypt} = require("../../../../units/user/encrypter");
+const makeResponse = require("../units/makeResponse");
+const authentication = require("../units/user/authenticator");
+const AV = require("leancloud-storage");
+const reqParameterParser = require("../units/reqParamsParser");
+const {encryptMD5, encrypt} = require("../units/user/encrypter");
+
+router.use('/create', require('./user/create'));
 
 router.get('/', async (request, response) => {
+    // 在数据库中查找用户
+    let user = await authentication(request, response);
+    user.set('password', undefined);
+    user.set('email', undefined);
+    user.set('avatar', `https://cravatar.cn/avatar/${user.get('emailMD5')}`);
+    makeResponse(response, 0, 'Success.', user);
+})
+
+router.get('/create', async (request, response) => {
     let User = AV.Object.extend('mUser');
 
     let reqBody = reqParameterParser(request);
@@ -27,10 +39,10 @@ router.get('/', async (request, response) => {
     // 检查用户是否已在数据库中
     if (await new AV.Query.or(
         new AV.Query('mUser')
-                .equalTo('id', id),
+            .equalTo('id', id),
         new AV.Query('mUser')
-                .equalTo('email', request.headers.email)
-        ).first()) {
+            .equalTo('email', request.headers.email)
+    ).first()) {
         makeResponse(response, -41, 'User already exists.');
         return
     }
@@ -49,6 +61,6 @@ router.get('/', async (request, response) => {
     await user.save();
 
     makeResponse(response, 0, 'Success, please verify your email.');
-})
+});
 
 module.exports = router;
