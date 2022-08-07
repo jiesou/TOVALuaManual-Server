@@ -1,11 +1,17 @@
-var router = require('express').Router();
-var AV = require('leancloud-storage');
-var makeResponse = require('../units/makeResponse.js');
-var reqParamsParser = require('../units/reqParamsParser.js');
+const router = require('express').Router();
+const db = require('../adapter/db.js');
+const makeResponse = require('../units/makeResponse.js');
+const reqParamsParser = require('../units/reqParamsParser.js');
+
+let Post = new db('Post');
 
 router.get('/list', async (request, response) => {
     let reqBody = reqParamsParser(request);
-    // 获取页数和长度
+    /**
+     * @preserve reqBody 请求参数
+     * @property reqBody.page 页码
+     * @property reqBody.pageLength 单页长度
+     */
     let page = ~~reqBody.page | 0;
     if (page < 0) {
         page = 0;
@@ -16,18 +22,19 @@ router.get('/list', async (request, response) => {
     } else if (pageLength > 50) {
         pageLength = 50;
     }
-    // 查询
-    let posts = new AV.Query('Post');
+
     makeResponse(response, 0, 'Success.', {
-        'cucrrentPage': page,
-        'totalPage': ~~(await posts.count() / pageLength),
-        // 不需要某些属性
-        // 按 timeCreate 倒序
-        'posts': await posts
-            .select(['-content', '-comments.data', '-objectId', '-createdAt', '-updatedAt'])
-            .descending('timeCreate')
-            .skip(page * pageLength)
-            .limit(pageLength).find(),
+        'currentPage': page,
+        // ~~ 能向下取整
+        'totalPage': ~~(await Post.count() / pageLength),
+        'posts': await Post.query(
+            {},
+            pageLength,
+            page * pageLength,
+            // 按 timeCreate 倒序
+            'timeCreate',
+            // 不需要某些属性
+            ['-content', '-comments.data'])
     });
 });
 
@@ -36,9 +43,9 @@ router.get('/', async (request, response) => {
     // 判断 id 是否合法
     if (/^[\da-f]{1,12}$/.test(String(reqBody.id))) {
         // 在数据库中查找帖子
-        let post = await new AV.Query('Item')
-            .equalTo('id', reqBody.id)
-            .select(['-description', '-objectId', '-createdAt', '-updatedAt']).first();
+        let post = await Post.query({
+            id: reqBody.id
+        }, 1, 0, undefined, ['-content', '-comments.data']);
         if (post) {
             makeResponse(response, 0, 'Success.', post);
         } else {

@@ -1,10 +1,11 @@
+const base = require('./base');
 const AV = require('leancloud-storage');
 
-let tableName = undefined;
+let mTableName = undefined;
 
 // 解析筛选器为 AV.Query 对象
 function parseField(field) {
-    let query = new AV.Query(tableName);
+    let query = new AV.Query(mTableName);
 
     if (!field) {
         return query;
@@ -31,7 +32,7 @@ function parseDataWithMustHasObj(data, object) {
     for (let key in data) {
         if (data.length) {
             object[key] = parseDataWithMustHasObj(data[key], object[key]);
-        } else if (key !== 'objectId' && key !== 'createdAt' && key !== 'updatedAt' && key !== 'ACL') {
+        } else if (key !== 'objectId' && key !== 'createdAt' && key !== 'updatedAt') {
             object.set(key, data[key]);
         }
     }
@@ -41,59 +42,74 @@ function parseDataWithMustHasObj(data, object) {
 function parseData(data, object) {
     if (!object) {
         // 自动初始化实例
-        object = new AV.Object(tableName);
+        object = new AV.Object(mTableName);
     }
     return parseDataWithMustHasObj(data, object);
 }
 
-module.exports = class db {
+module.exports = class db extends base {
     // 调用初始化数据库密钥
     static init(options) {
         AV.init(options);
     }
 
     // 构建设置 class
-    constructor(inTableName) {
-        tableName = inTableName;
+    constructor(tableName) {
+        super(tableName);
+        mTableName = tableName;
     }
 
-    async query(field) {
-        // first 方法只获取一个符合条件的对象
-        return await parseField(field).first().toFullJSON();
+    query(field, limit = 100, offset = 0, descending, select) {
+        select = select || [];
+        // 排除 LeanCloud 独有的自带字段
+        select.push('-objectId');
+        select.push('-createdAt');
+        select.push('-updatedAt');
+        let query = parseField(field)
+            .skip(offset)
+            .limit(limit)
+            .descending(descending)
+            .select(select);
+        if (limit === 1) {
+            // first 方法只获取一个符合条件的对象
+            return query.first().toFullJSON();
+        } else {
+            return query.find();
+        }
     }
 
-    async queryAll(field) {
-        return await parseField(field).find().toFullJSON();
+    count(field) {
+        return parseField(field).count();
     }
 
-    async put(data) {
-        return await parseData(data).save();
+    put(data) {
+        return parseData(data).save();
     }
 
-    async putAll(dataArr) {
+    putAll(dataArr) {
         let objects = [];
         // 遍历添加全部，然后一次性提交保存数据
         dataArr.forEach(data => {
             objects.push(parseData(data));
         });
-        return await AV.Object.saveAll(objects);
+        return AV.Object.saveAll(objects);
     }
 
-    async update(field, data) {
-        let object = await parseField(field).first();
+    update(field, data) {
+        let object = parseField(field).first();
         object = parseData(data, object);
-        return await object.save();
+        return object.save();
     }
 
-    async updateAll(fieldAndDataArr) {
+    updateAll(fieldAndDataArr) {
         let objects = [];
         // forEach 是同步方法，不能用 await
         for (let fieldAndData of fieldAndDataArr) {
-            let object = await parseField(fieldAndData.field).first();
+            let object = parseField(fieldAndData.field).first();
             object = parseData(fieldAndData.data, object);
             objects.push(object);
         }
-        return await AV.Object.saveAll(objects);
+        return AV.Object.saveAll(objects);
     }
 }
 
