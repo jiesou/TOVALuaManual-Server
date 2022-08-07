@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const db = require('../../adapter/leancloud.js');
+const db = require('../../adapter/db.js');
 const {default: fetch} = require("node-fetch-cjs");
 const makeResponse = require('../../units/makeResponse.js');
 

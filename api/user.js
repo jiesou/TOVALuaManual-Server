@@ -5,8 +5,6 @@ const AV = require("leancloud-storage");
 const reqParameterParser = require("../units/reqParamsParser");
 const {encryptMD5, encrypt} = require("../units/user/encrypter");
 
-router.use('/create', require('./user/create'));
-
 router.get('/', async (request, response) => {
     // 在数据库中查找用户
     let user = await authentication(request, response);

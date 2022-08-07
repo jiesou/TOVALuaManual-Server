@@ -1,6 +1,6 @@
 const express = require('express');
 const makeResponse = require('./units/makeResponse.js');
-const db = require('./adapter/leancloud.js');
+const db = require('./adapter/db.js');
 
 require('dotenv').config()
 db.init({
