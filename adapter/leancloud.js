@@ -95,9 +95,11 @@ module.exports = class db extends base {
         return AV.Object.saveAll(objects);
     }
 
-    async update(field, data) {
+    async update(field, data, dontOverwrite) {
         let object = await this._parseField(field).first();
-        object = this._parseData(data, object);
+        if (!object || !dontOverwrite) {
+            object = this._parseData(data, object);
+        }
         return await object.save();
     }
 

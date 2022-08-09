@@ -2,9 +2,12 @@ const router = require('express').Router();
 const db = require('../../adapter/db.js');
 const {default: fetch} = require("node-fetch-cjs");
 const makeResponse = require('../../units/makeResponse.js');
+const {encryptMD5} = require("../../units/user/encrypter");
 
 // 声明 class
 const Post = new db('Post');
+const Comment = new db('Comment');
+const User = new db('mUser');
 
 async function createPost(data) {
     await Post.update({
@@ -18,11 +21,14 @@ router.get('/', (request, response) => {
         res = await res.json()
         res = res.data;
 
+        console.log(`all posts ${res.length}`);
+
         // 遍历前十个帖子(手册项目)
         let finishedItems = 0;
-        for (let i = 0; i < 10; i++) {
-            // 多线程 10 条帖子并发
+        for (let i = 0; i < 7; i++) {
+            // 多线程 7 条帖子并发
             createPost(res[i]).then(() => {
+                console.log(`post ${i} finished`);
                 finishedItems++;
                 if (finishedItems >= 10) {
                     makeResponse(response, 0, 'Success.')
@@ -39,56 +45,74 @@ router.get('/all', async (request, response) => {
     allPage = allPage.per_page
     console.log('allPages', allPage);
 
-    // 初始化已完成页数
-    let finishedPage = 0;
-
     console.log('Task started');
 
-    // 遍历每一页
-    for (let page = 1; page <= allPage; page++) {
-        console.log('pageStart', page)
-
-        // 拼接 API 链接并在线程中发出请求
-        fetch(`https://lua.yswy.top/index/api/manuallist?page=${page}`).then(async res => {
-            res = await res.json()
-            res = res.data;
-            // 初始化所有帖子对象的数组
-            let posts = []
-
-            // 遍历每一个帖子(手册项目)
-            for (let i = 0; i < res.length; i++) {
-                let data = res[i];
-                console.log(`page ${page} itemStart`, i);
-                posts.push({
-                    id: String(data.manual_id),
-                }, await postDataToObj(data));
-                console.log(`page ${page} itemEnd`, i);
-            }
-            console.log('pageEnd', page)
-            // 保存该页全部到数据库
-            await Post.updateAll(posts);
-            finishedPage++;
-            console.log(`Task ${finishedPage} / ${allPage}`);
-            // 如果全部页面完成
-            if (finishedPage >= allPage) {
-                console.log('Task finished');
-                return makeResponse(response, 0, 'Success.')
-            }
-        });
+    // ceil 向上取整
+    let taskPage = Math.ceil(allPage / 3);
+    // 把所有页分三份，三个任务
+    for (let task = 0; task < 3; task++) {
+        // 遍历每一页
+        let taskEndPage = (task + 1) * taskPage;
+        if (taskEndPage > allPage) {
+            taskEndPage = allPage;
+        }
+        await finishTask(task * taskPage, taskEndPage);
     }
+    makeResponse(response, 0, 'Success.')
 });
+
+async function finishTask(pageStart, pageEnd) {
+    return new Promise(resolve => {
+        // 初始化已完成页数
+        let finishedPage = 0;
+        let allPage = pageEnd - pageStart + 1;
+        for (let page = pageStart; page <= pageEnd; page++) {
+            console.log('pageStart', page)
+            // 拼接 API 链接并在线程中发出请求
+            mFetch(`https://lua.yswy.top/index/api/manuallist?page=${page}`).then(async res => {
+                // 初始化所有帖子对象的数组
+                let posts = []
+
+                // 遍历每一个帖子(手册项目)
+                for (let i = 0; i < res.length; i++) {
+                    let data = res[i];
+                    console.log(`page ${page} itemStart`, i);
+                    posts.push({
+                        // id 过滤器，防止文章重复
+                        id: String(data.manual_id),
+                    }, await postDataToObj(data));
+                    console.log(`page ${page} itemEnd`, i);
+                }
+                console.log('pageEnd', page)
+                // 保存该页全部到数据库
+                await Post.updateAll(posts);
+                finishedPage++;
+                console.log(`Task${pageStart} ${finishedPage} / ${allPage}`);
+                // 如果全部页面完成
+                if (finishedPage >= allPage) {
+                    console.log('Task finished');
+                    resolve();
+                }
+            });
+        }
+    });
+
+}
 
 
 async function mFetch(url) {
-    try {
-        let res = await fetch(url);
-        let json = await res.json();
-        return json.data;
-    } catch (error) {
-        // 失败自动重试
-        console.log('sendAsyncFetch ERROR', error);
-        return await mFetch(url);
-    }
+    return new Promise(resolve => {
+        fetch(url).then(async res => {
+            res = await res.json();
+            resolve(res.data);
+        }).catch(async error => {
+            // 失败自动重试
+            console.log('sendAsyncFetch ERROR', error);
+            await setTimeout(async () => {
+                resolve(await mFetch(url));
+            }, 500);
+        });
+    });
 }
 
 /**
@@ -125,6 +149,9 @@ async function postDataToObj(data) {
          * @property comment_time 评论时间
          */
         comments.push({
+            // id 过滤器，防止评论重复
+            id: String(comment.comment_id),
+        }, {
             id: String(comment.comment_id),
             timeCreate: new Date(comment.comment_time.replace(/[年月日]/g, '.')).getTime(),
             content: comment.comment_content,
@@ -135,7 +162,9 @@ async function postDataToObj(data) {
             },
         });
     })
+    await Comment.updateAll(comments);
 
+    await createUser(data.user_id, data.user_name, data.user_portrait);
     // 对 post 对象赋值
     return {
         id: String(data.manual_id),
@@ -144,12 +173,9 @@ async function postDataToObj(data) {
         timeCreate: new Date(data.manual_time_add).getTime(),
         timeEdit: new Date(data.manual_time).getTime(),
         source: data.manual_source,
-        user: {
-            id: data.user_id,
-            name: data.user_name,
-            avatar: data.user_portrait
-        },
-        favorites: resContent.manual_fav,
+        favorites: data.manual_fav || 0,
+        userId: data.user_id,
+        user: undefined,
         content: resContent.manual_content,
         description: resContent.manual_content.replace(/\s/g, ' ').substring(0, 300),
         reaction: {
@@ -157,10 +183,21 @@ async function postDataToObj(data) {
             dislike: data.manual_down
         },
         views: data.manual_hits,
-        comments: {
-            length: comments.length,
-            data: comments
+        commentsLength: comments.length,
+    }
+}
+
+async function createUser(id, name, avatar) {
+    if (avatar) {
+        let user = {
+            id: encryptMD5(avatar).substr(0, 8),
+            nick: name,
+            avatar: `https://${avatar.substr(avatar.indexOf('/') + 2)}`,
+            email: null
         }
+        // 例如 http://thirdqq.qlogo.cn/g?b=oidb&k=ia6f58HrHtRZT4L0pr87Bkw&s=100&t=1649663719
+        // 转 https
+        await User.update({id: user.id}, user, true);
     }
 }
 
