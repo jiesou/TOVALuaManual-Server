@@ -12,7 +12,7 @@ const User = new db('mUser');
 async function createPost(data) {
     await Post.update({
         id: String(data.manual_id),
-    }, await postDataToObj(data));
+    }, await parserPostData(data));
 }
 
 router.get('/', (request, response) => {
@@ -24,13 +24,14 @@ router.get('/', (request, response) => {
         console.log(`all posts ${res.length}`);
 
         // 遍历前三个帖子(手册项目)
-        let finishedItems = 0;
-        for (let i = 0; i < 3; i++) {
+        let finishedPosts = 0;
+        let todoPosts = 3;
+        for (let i = 0; i < todoPosts; i++) {
             // 多线程三条帖子并发
             createPost(res[i]).then(() => {
                 console.log(`post ${i} finished`);
-                finishedItems++;
-                if (finishedItems >= 3) {
+                finishedPosts++;
+                if (finishedPosts >= todoPosts) {
                     makeResponse(response, 0, 'Success.')
                 }
             });
@@ -80,7 +81,7 @@ async function finishTask(pageStart, pageEnd) {
                     posts.push({
                         // id 过滤器，防止文章重复
                         id: String(data.manual_id),
-                    }, await postDataToObj(data));
+                    }, await parserPostData(data));
                     console.log(`page ${page} itemEnd`, i);
                 }
                 console.log('pageEnd', page)
@@ -134,56 +135,81 @@ async function mFetch(url) {
  * @param data.manual_hits 点击数
  * @returns {Promise<*>}
  */
-async function postDataToObj(data) {
-    // 获取完整内容
-    let resContent = await mFetch(`https://lua.yswy.top/index/api/manualdata?manual_id=${data.manual_id}`);
-
-    // 获取评论
-    let resComments = await mFetch(`https://lua.yswy.top/index/api/commentlist?page=1&manual_id=${data.manual_id}`);
-    let comments = [];
-    // 遍历每一条评论
-    resComments.forEach(comment => {
-        /**
-         * @property comment_id 评论 id
-         * @property comment_content 评论内容
-         * @property comment_time 评论时间
-         */
-        comments.push({
-            // id 过滤器，防止评论重复
-            id: String(comment.comment_id),
-        }, {
-            id: String(comment.comment_id),
-            timeCreate: new Date(comment.comment_time.replace(/[年月日]/g, '.')).getTime(),
-            content: comment.comment_content,
-            user: {
-                id: comment.user_id,
-                name: comment.user_name,
-                avatar: comment.user_portrait
-            },
+async function parserPostData(data) {
+    return new Promise(resolve => {
+        let finishedTaskData = [];
+        // 获取完整内容
+        mFetch(`https://lua.yswy.top/index/api/manualdata?manual_id=${data.manual_id}`).then(res => {
+            finishedTaskData.content = res;
+            let post = generatePost(finishedTaskData, data);
+            if (post) {
+                resolve(post);
+            }
         });
-    })
-    await Comment.updateAll(comments);
 
-    await createUser(data.user_id, data.user_name, data.user_portrait);
-    // 对 post 对象赋值
-    return {
-        id: String(data.manual_id),
-        title: data.manual_name,
-        category: data.type_id,
-        timeCreate: new Date(data.manual_time_add).getTime(),
-        timeEdit: new Date(data.manual_time).getTime(),
-        source: data.manual_source,
-        favorites: data.manual_fav || 0,
-        userId: data.user_id,
-        user: undefined,
-        content: resContent.manual_content,
-        description: resContent.manual_content.replace(/\s/g, ' ').substring(0, 300),
-        reaction: {
-            like: data.manual_up,
-            dislike: data.manual_down
-        },
-        views: data.manual_hits,
-        commentsLength: comments.length,
+        // 获取评论
+        mFetch(`https://lua.yswy.top/index/api/commentlist?page=1&manual_id=${data.manual_id}`).then(async res => {
+            let comments = [];
+            // 遍历每一条评论
+            for (const comment of res) {
+                /**
+                 * @property comment_id 评论 id
+                 * @property comment_content 评论内容
+                 * @property comment_time 评论时间
+                 */
+                comments.push({
+                    // id 过滤器，防止评论重复
+                    id: String(comment.comment_id),
+                }, {
+                    id: String(comment.comment_id),
+                    timeCreate: new Date(comment.comment_time.replace(/[年月日]/g, '.')).getTime(),
+                    content: comment.comment_content,
+                    userId: comment.user_id,
+                });
+                await createUser(comment.user_id, comment.user_name, comment.user_portrait);
+            }
+            await Comment.updateAll(comments);
+            finishedTaskData.commentsLength = res.length;
+            let post = generatePost(finishedTaskData, data);
+            if (post) {
+                resolve(post);
+            }
+        });
+
+
+        createUser(data.user_id, data.user_name, data.user_portrait).then(() => {
+            finishedTaskData.user = true;
+            let post = generatePost(finishedTaskData, data)
+            if (post) {
+                resolve(post);
+            }
+        });
+
+    });
+}
+
+function generatePost(taskData, data) {
+    console.log('generatePost', Object.keys(taskData).length)
+    if (Object.keys(taskData).length >= 3) {
+        return {
+            id: String(data.manual_id),
+            title: data.manual_name,
+            category: data.type_id,
+            timeCreate: new Date(data.manual_time_add).getTime(),
+            timeEdit: new Date(data.manual_time).getTime(),
+            source: data.manual_source,
+            favorites: data.manual_fav || 0,
+            userId: data.user_id,
+            user: undefined,
+            content: taskData.content.manual_content,
+            description: taskData.content.manual_content.replace(/\s/g, ' ').substring(0, 300),
+            reaction: {
+                like: data.manual_up,
+                dislike: data.manual_down
+            },
+            views: data.manual_hits,
+            commentsLength: taskData.commentsLength,
+        }
     }
 }
 
