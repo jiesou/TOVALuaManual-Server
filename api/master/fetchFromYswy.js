@@ -23,14 +23,14 @@ router.get('/', (request, response) => {
 
         console.log(`all posts ${res.length}`);
 
-        // 遍历前十个帖子(手册项目)
+        // 遍历前三个帖子(手册项目)
         let finishedItems = 0;
-        for (let i = 0; i < 7; i++) {
-            // 多线程 7 条帖子并发
+        for (let i = 0; i < 3; i++) {
+            // 多线程三条帖子并发
             createPost(res[i]).then(() => {
                 console.log(`post ${i} finished`);
                 finishedItems++;
-                if (finishedItems >= 10) {
+                if (finishedItems >= 3) {
                     makeResponse(response, 0, 'Success.')
                 }
             });
