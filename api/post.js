@@ -29,12 +29,14 @@ router.get('/list', async (request, response) => {
         'totalPage': ~~(await Post.count() / pageLength),
         'posts': await Post.query(
             {},
-            pageLength,
-            page * pageLength,
-            // 按 timeCreate 倒序
-            'timeCreate',
-            // 不需要某些属性
-            ['-content', '-comments.data'])
+            {
+                limit: pageLength,
+                offset: page * pageLength,
+                // 按 timeCreate 倒序
+                descending: 'timeCreate',
+                // 不需要某些属性
+                select: ['-content', '-comments.data']
+            })
     });
 });
 
@@ -45,7 +47,10 @@ router.get('/', async (request, response) => {
         // 在数据库中查找帖子
         let post = await Post.query({
             id: reqBody.id
-        }, 1, 0, undefined, ['-content', '-comments.data']);
+        }, {
+            limit: 1,
+            select: ['-content', '-comments.data']
+        });
         if (post) {
             makeResponse(response, 0, 'Success.', post);
         } else {

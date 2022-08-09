@@ -8,7 +8,7 @@ module.exports = class db {
         this.tableName = tableName;
     }
 
-    async query(field, limit=100, offset=0, descending, select) {
+    async query(field, { limit=100, offset=0, descending, select } = {}) {
     }
 
     async count(field) {
