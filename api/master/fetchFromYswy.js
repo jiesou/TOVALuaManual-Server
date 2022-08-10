@@ -23,11 +23,11 @@ router.get('/', (request, response) => {
 
         console.log(`all posts ${res.length}`);
 
-        // 遍历前三个帖子(手册项目)
+        // 遍历前五个帖子(手册项目)
         let finishedPosts = 0;
-        let todoPosts = 3;
+        let todoPosts = 5;
         for (let i = 0; i < todoPosts; i++) {
-            // 多线程三条帖子并发
+            // 多线程并发
             createPost(res[i]).then(() => {
                 console.log(`post ${i} finished`);
                 finishedPosts++;
@@ -149,6 +149,9 @@ async function parserPostData(data) {
 
         // 获取评论
         mFetch(`https://lua.yswy.top/index/api/commentlist?page=1&manual_id=${data.manual_id}`).then(async res => {
+            let finishedComment = 0;
+            let todoComment = res.length;
+
             let comments = [];
             // 遍历每一条评论
             for (const comment of res) {
@@ -166,7 +169,17 @@ async function parserPostData(data) {
                     content: comment.comment_content,
                     userId: comment.user_id,
                 });
-                await createUser(comment.user_id, comment.user_name, comment.user_portrait);
+                createUser(comment.user_id, comment.user_name, comment.user_portrait).then(() => {
+                    finishedComment++;
+                    console.log(`Comment createUser ${finishedComment} / ${todoComment}`);
+                    if (finishedComment >= todoComment) {
+                        finishedTaskData.commentsLength = todoComment;
+                        let post = generatePost(finishedTaskData, data);
+                        if (post) {
+                            resolve(post);
+                        }
+                    }
+                });
             }
             await Comment.updateAll(comments);
             finishedTaskData.commentsLength = res.length;
