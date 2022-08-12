@@ -96,13 +96,13 @@ module.exports = class db extends base {
     }
 
     delete(field) {
-        // select 为空就是不要数据
-        let object = this._parseField(field).select([]).first();
+        // select 只有 objectId 就是不要数据
+        let object = this._parseField(field).select(['objectId']).first();
         return object.destroy();
     }
 
     async update(field, data, dontOverwrite) {
-        let object = await this._parseField(field).select([]).first();
+        let object = await this._parseField(field).select(['objectId']).first();
         if (!object || !dontOverwrite) {
             object = this._parseData(data, object);
         }
