@@ -16,7 +16,7 @@ module.exports = class db extends base {
     _parseField(field) {
         let query = new AV.Query(this.tableName);
 
-        if (!field) {
+        if (!field || field === {}) {
             return query;
         }
 
@@ -95,8 +95,14 @@ module.exports = class db extends base {
         return AV.Object.saveAll(objects);
     }
 
+    delete(field) {
+        // select 为空就是不要数据
+        let object = this._parseField(field).select([]).first();
+        return object.destroy();
+    }
+
     async update(field, data, dontOverwrite) {
-        let object = await this._parseField(field).first();
+        let object = await this._parseField(field).select([]).first();
         if (!object || !dontOverwrite) {
             object = this._parseData(data, object);
         }
@@ -107,7 +113,7 @@ module.exports = class db extends base {
         let objects = [];
         // forEach 是同步方法，不能用 await
         for (let fieldAndData of fieldAndDataArr) {
-            let object = await this._parseField(fieldAndData.field).first();
+            let object = await this._parseField(fieldAndData.field).select([]).first();
             object = this._parseData(fieldAndData.data, object);
             objects.push(object);
         }

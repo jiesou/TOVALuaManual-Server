@@ -20,6 +20,9 @@ module.exports = class db {
     async putAll(dataArr) {
     }
 
+    async delete(field) {
+    }
+
     async update(field, data) {
     }
 

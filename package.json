@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "deploy": "deta deploy"
+    "deploy": "deta deploy",
+    "databaseOptimize": "node master/databaseOptimize.js"
   },
   "dependencies": {
     "dotenv": "^16.0.1",
